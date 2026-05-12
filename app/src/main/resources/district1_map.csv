@@ -1,0 +1,41 @@
+# Bản đồ mẫu Quận 1, TP.HCM — from_id,to_id,from_name,to_name,distance_m,speed_kmh,is_oneway,from_lat,from_lng,to_lat,to_lng
+from_id,to_id,from_name,to_name,distance_m,speed_kmh,is_oneway,from_lat,from_lng,to_lat,to_lng
+BT,NTD,Chợ Bến Thành,Nhà thờ Đức Bà,850,30,false,0.0,0.0,0.0,0.0
+NTD,DDL,Nhà thờ Đức Bà,Dinh Độc Lập,650,30,false,0.0,0.0,0.0,0.0
+DDL,NHT,Dinh Độc Lập,Nhà hát Thành phố,900,35,false,0.0,0.0,0.0,0.0
+NHT,NHUE,Nhà hát Thành phố,Phố đi bộ Nguyễn Huệ,400,25,false,0.0,0.0,0.0,0.0
+NHUE,BITX,Phố đi bộ Nguyễn Huệ,Tháp Bitexco,550,30,false,0.0,0.0,0.0,0.0
+BITX,SAIGC,Tháp Bitexco,Saigon Centre,420,30,false,0.0,0.0,0.0,0.0
+SAIGC,TAKA,Saigon Centre,Takashimaya,180,20,false,0.0,0.0,0.0,0.0
+TAKA,BBHD,Takashimaya,Bến Bạch Đằng,1200,40,false,0.0,0.0,0.0,0.0
+BBHD,BVUI,Bến Bạch Đằng,Phố Bùi Viện,1500,35,false,0.0,0.0,0.0,0.0
+BVUI,BT,Phố Bùi Viện,Chợ Bến Thành,700,25,false,0.0,0.0,0.0,0.0
+BT,BTAN,Chợ Bến Thành,Bảo tàng Chứng tích chiến tranh,1100,30,false,0.0,0.0,0.0,0.0
+BTAN,UBND,Bảo tàng Chứng tích chiến tranh,UBND Quận 1,900,30,false,0.0,0.0,0.0,0.0
+UBND,BVDL,UBND Quận 1,Bệnh viện Da liễu,600,30,false,0.0,0.0,0.0,0.0
+BVDL,CNH,Bệnh viện Da liễu,Chùa Ngọc Hoàng,800,30,false,0.0,0.0,0.0,0.0
+CNH,CXL,Chùa Ngọc Hoàng,Chùa Xá Lợi,2200,40,false,0.0,0.0,0.0,0.0
+CXL,CV29,Chùa Xá Lợi,Công viên 23/9,1300,35,false,0.0,0.0,0.0,0.0
+CV29,LELOI,Công viên 23/9,Lê Lợi (gần Đồng Khởi),500,25,false,0.0,0.0,0.0,0.0
+LELOI,HBT,Lê Lợi,Hai Bà Trưng (gần Tôn Đức Thắng),450,25,true,0.0,0.0,0.0,0.0
+NHUE,LELOI,Phố đi bộ Nguyễn Huệ,Lê Lợi (gần Đồng Khởi),350,25,false,0.0,0.0,0.0,0.0
+DDL,CV29,Dinh Độc Lập,Công viên 23/9,700,30,false,0.0,0.0,0.0,0.0
+NTD,NHUE,Nhà thờ Đức Bà,Phố đi bộ Nguyễn Huệ,550,30,false,0.0,0.0,0.0,0.0
+BITX,BBHD,Tháp Bitexco,Bến Bạch Đằng,950,35,false,0.0,0.0,0.0,0.0
+BT,DDL,Chợ Bến Thành,Dinh Độc Lập,1400,35,false,0.0,0.0,0.0,0.0
+TAKA,NHUE,Takashimaya,Phố đi bộ Nguyễn Huệ,800,30,false,0.0,0.0,0.0,0.0
+BVUI,NHT,Phố Bùi Viện,Nhà hát Thành phố,1100,30,false,0.0,0.0,0.0,0.0
+BT,UBND,Chợ Bến Thành,UBND Quận 1,1600,35,false,0.0,0.0,0.0,0.0
+DDL,BVUI,Dinh Độc Lập,Phố Bùi Viện,1700,30,false,0.0,0.0,0.0,0.0
+NHT,BITX,Nhà hát Thành phố,Tháp Bitexco,600,30,false,0.0,0.0,0.0,0.0
+SAIGC,CV29,Saigon Centre,Công viên 23/9,900,35,false,0.0,0.0,0.0,0.0
+BBHD,DDL,Bến Bạch Đằng,Dinh Độc Lập,2000,40,false,0.0,0.0,0.0,0.0
+UBND,NHT,UBND Quận 1,Nhà hát Thành phố,850,30,false,0.0,0.0,0.0,0.0
+BVDL,CV29,Bệnh viện Da liễu,Công viên 23/9,1500,35,false,0.0,0.0,0.0,0.0
+CNH,BT,Chùa Ngọc Hoàng,Chợ Bến Thành,2400,40,false,0.0,0.0,0.0,0.0
+CXL,BITX,Chùa Xá Lợi,Tháp Bitexco,1800,40,false,0.0,0.0,0.0,0.0
+CV29,BVUI,Công viên 23/9,Phố Bùi Viện,900,30,false,0.0,0.0,0.0,0.0
+LELOI,BITX,Lê Lợi,Tháp Bitexco,650,30,false,0.0,0.0,0.0,0.0
+HBT,DLNK,Hai Bà Trưng,Đường Nguyễn Khắc Nhu (Đa Kao),500,30,false,0.0,0.0,0.0,0.0
+DLNK,UBND,Đường Nguyễn Khắc Nhu,UBND Quận 1,700,30,false,0.0,0.0,0.0,0.0
+ISL1,ISL2,Đảo thử nghiệm 1,Đảo thử nghiệm 2,120,30,false,0.0,0.0,0.0,0.0

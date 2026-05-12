@@ -1,0 +1,44 @@
+# from_id,to_id,from_name,to_name,distance_m,speed_kmh,is_oneway,from_lat,from_lng,to_lat,to_lng
+# TRỤC LÊ DUẨN - DINH ĐỘC LẬP - THẢO CẦM VIÊN
+DDL,NTD,Dinh Độc Lập,Nhà thờ Đức Bà,450,30,false,10.7769,106.6953,10.7798,106.6990
+NTD,DP,Nhà thờ Đức Bà,Diamond Plaza,150,30,false,10.7798,106.6990,10.7812,106.6991
+DP,VCC,Diamond Plaza,Vincom Center,350,25,true,10.7812,106.6991,10.7781,106.7018
+VCC,HTS,Vincom Center,Khách sạn Hyatt Saigon,400,20,true,10.7781,106.7018,10.7770,106.7027
+HTS,NHT,Khách sạn Hyatt Saigon,Nhà hát Thành phố,150,20,false,10.7770,106.7027,10.7766,106.7032
+DP,HTR,Diamond Plaza,Hồ Con Rùa,500,30,false,10.7812,106.6991,10.7827,106.6959
+NTD,TV,Nhà thờ Đức Bà,Thảo Cầm Viên,1200,35,false,10.7798,106.6990,10.7877,106.7053
+TV,DTV,Thảo Cầm Viên,Đài Truyền hình HTV,300,30,false,10.7877,106.7053,10.7865,106.7056
+DTV,USSH,Đài Truyền hình HTV,ĐH KHXH&NV,250,25,false,10.7865,106.7056,10.7858,106.7042
+
+# TRỤC ĐỒNG KHỞI - NGUYỄN HUỆ - BẾN BẠCH ĐẰNG
+NHT,NHUE,Nhà hát Thành phố,Phố đi bộ Nguyễn Huệ,150,20,false,10.7766,106.7032,10.7742,106.7043
+NHUE,BITX,Phố đi bộ Nguyễn Huệ,Tháp Bitexco,400,25,false,10.7742,106.7043,10.7715,106.7044
+BITX,BBHD,Tháp Bitexco,Bến Bạch Đằng,300,30,false,10.7715,106.7044,10.7738,106.7070
+BBHD,MRH,Bến Bạch Đằng,Khách sạn Majestic,200,25,false,10.7738,106.7070,10.7725,106.7068
+MRH,NHUE,Khách sạn Majestic,Phố đi bộ Nguyễn Huệ,250,20,false,10.7725,106.7068,10.7742,106.7043
+NHUE,SAIGC,Phố đi bộ Nguyễn Huệ,Saigon Centre,300,20,false,10.7742,106.7043,10.7736,106.7012
+
+# TRỤC LÊ LỢI - BẾN THÀNH - CÔNG VIÊN
+SAIGC,BT,Saigon Centre,Chợ Bến Thành,400,25,false,10.7736,106.7012,10.7719,106.6983
+BT,CV29,Chợ Bến Thành,Công viên 23/9,350,30,false,10.7719,106.6983,10.7695,106.6946
+CV29,BVUI,Công viên 23/9,Phố Bùi Viện,500,25,false,10.7695,106.6946,10.7674,106.6934
+CV29,NTX,Công viên 23/9,Ngã sáu Phù Đổng,600,30,false,10.7695,106.6946,10.7705,106.6917
+NTX,CVTD,Ngã sáu Phù Đổng,Công viên Tao Đàn,450,30,false,10.7705,106.6917,10.7745,106.6925
+CVTD,DDL,Công viên Tao Đàn,Dinh Độc Lập,700,30,false,10.7745,106.6925,10.7769,106.6953
+CVTD,BTCC,Công viên Tao Đàn,Bảo tàng Chứng tích Chiến tranh,600,30,false,10.7745,106.6925,10.7795,106.6921
+BTCC,HTR,Bảo tàng Chứng tích Chiến tranh,Hồ Con Rùa,800,30,false,10.7795,106.6921,10.7827,106.6959
+
+# KẾT NỐI HÀNH LANG
+DDL,CVTD,Dinh Độc Lập,Công viên Tao Đàn,700,30,false,10.7769,106.6953,10.7745,106.6925
+NHT,VCC,Nhà hát Thành phố,Vincom Center,200,20,false,10.7766,106.7032,10.7781,106.7018
+BT,DDL,Chợ Bến Thành,Dinh Độc Lập,1000,35,false,10.7719,106.6983,10.7769,106.6953
+HTR,TD,Hồ Con Rùa,Nhà thờ Tân Định,1600,35,false,10.7827,106.6959,10.7912,106.6908
+TD,CVLE,Nhà thờ Tân Định,Công viên Lê Văn Tám,450,30,false,10.7912,106.6908,10.7865,106.6914
+CVLE,HTR,Công viên Lê Văn Tám,Hồ Con Rùa,900,35,false,10.7865,106.6914,10.7827,106.6959
+SAIGC,NHT,Saigon Centre,Nhà hát Thành phố,450,25,false,10.7736,106.7012,10.7766,106.7032
+
+# MỞ RỘNG
+HTR,UBND,Hồ Con Rùa,UBND Quận 1,1200,30,false,10.7827,106.6959,10.7760,106.7015
+UBND,NHT,UBND Quận 1,Nhà hát Thành phố,300,20,false,10.7760,106.7015,10.7766,106.7032
+BTCC,DDL,Bảo tàng Chứng tích Chiến tranh,Dinh Độc Lập,550,30,false,10.7795,106.6921,10.7769,106.6953
+VCC,NTD,Vincom Center,Nhà thờ Đức Bà,300,25,true,10.7781,106.7018,10.7798,106.6990

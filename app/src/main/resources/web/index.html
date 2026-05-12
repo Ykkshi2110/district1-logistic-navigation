@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>District 1 Logistics Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0f172a;
+            color: #f1f5f9;
+        }
+
+        #sidebar {
+            width: 360px;
+            background: #1e293b;
+            color: #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            border-right: 1px solid #334155;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+
+        #header {
+            padding: 20px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            border-bottom: 1px solid #334155;
+            background: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #tabs {
+            display: flex;
+            background: #0f172a;
+            padding: 4px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px 8px;
+            background: transparent;
+            color: #94a3b8;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            border-radius: 4px;
+        }
+
+        .tab.active {
+            background: #2563eb;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .panel {
+            display: none;
+            padding: 20px;
+            gap: 12px;
+            flex-direction: column;
+        }
+
+        .panel.active {
+            display: flex;
+        }
+
+        label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+
+        select,
+        button,
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: white;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        select:focus {
+            border-color: #2563eb;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            border: none;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            padding: 5px 0;
+            font-size: 0.9rem;
+        }
+
+        #map {
+            flex: 1;
+            background: #0f172a;
+        }
+
+        .step-badge {
+            background: #16a34a;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        #dijk-result,
+        #tsp-result {
+            margin-top: 10px;
+        }
+
+        .result-card {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+        }
+
+        .result-card p {
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .result-card strong {
+            color: #60a5fa;
+        }
+
+        #block-status {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            background: #0f172a;
+            padding: 10px;
+            border-radius: 8px;
+            min-height: 40px;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        li {
+            margin-bottom: 4px;
+            position: relative;
+            padding-left: 15px;
+        }
+
+        li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #ef4444;
+        }
+
+        /* Custom Scrollbar */
+        #sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #sidebar::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="sidebar">
+        <div id="header">🗺️ District 1 Logistics</div>
+
+        <div id="tabs">
+            <button class="tab active" data-tab="dijkstra">TÌM ĐƯỜNG</button>
+            <button class="tab" data-tab="tsp">GIAO HÀNG</button>
+            <button class="tab" data-tab="block">CHẶN ĐƯỜNG</button>
+        </div>
+
+        <!-- Panel: Dijkstra -->
+        <div id="panel-dijkstra" class="panel active">
+            <label>Điểm đi</label>
+            <select id="dijk-from"></select>
+            <label>Điểm đến</label>
+            <select id="dijk-to"></select>
+            <label>Chế độ tối ưu</label>
+            <div class="radio-group">
+                <label style="color:white; cursor:pointer"><input type="radio" name="dijk-mode" value="DISTANCE"
+                        checked> Ngắn nhất</label>
+                <label style="color:white; cursor:pointer"><input type="radio" name="dijk-mode" value="TIME"> Nhanh
+                    nhất</label>
+            </div>
+            <button id="btn-find-route">🔍 TÌM ĐƯỜNG NGAY</button>
+            <div id="dijk-result"></div>
+        </div>
+
+        <!-- Panel: TSP -->
+        <div id="panel-tsp" class="panel">
+            <label>Kho xuất phát (Depot)</label>
+            <select id="tsp-depot"></select>
+            <label>Các điểm giao hàng</label>
+            <div id="tsp-delivery-list" style="display:flex; flex-direction:column; gap:8px">
+                <select class="tsp-delivery"></select>
+                <select class="tsp-delivery"></select>
+                <select class="tsp-delivery"></select>
+            </div>
+            <button id="btn-add-delivery" style="background:#334155; font-size:0.8rem">+ THÊM ĐIỂM GIAO</button>
+            <label>Chế độ tối ưu</label>
+            <div class="radio-group">
+                <label style="color:white; cursor:pointer"><input type="radio" name="tsp-mode" value="DISTANCE" checked>
+                    Ngắn nhất</label>
+                <label style="color:white; cursor:pointer"><input type="radio" name="tsp-mode" value="TIME"> Nhanh
+                    nhất</label>
+            </div>
+            <button id="btn-solve-tsp">🚚 TỐI ƯU LỘ TRÌNH</button>
+            <div id="tsp-result"></div>
+        </div>
+
+        <!-- Panel: Block -->
+        <div id="panel-block" class="panel">
+            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 10px;">Click trực tiếp vào các đoạn đường trên
+                bản đồ để chặn hoặc mở lại.</p>
+            <label>Danh sách đường bị chặn</label>
+            <div id="block-status">Chưa có đường nào bị chặn.</div>
+            <button id="btn-reset-all" style="background:#ef4444">🔓 MỞ TẤT CẢ ĐƯỜNG</button>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ── Constants ──────────────────────────────────────────────
+        const MAP_CENTER = [10.776, 106.700];
+        const MAP_ZOOM = 15;
+        const COLORS = {
+            edge: '#64748b',  // xám xanh
+            blocked: '#ef4444',  // đỏ
+            route: '#3b82f6',  // xanh dương
+            tsp: ['#10b981', '#059669', '#047857', '#065f46', '#064e3b'] // xanh lá gradient
+        };
+
+        // ── State ───────────────────────────────────────────────────
+        const state = {
+            map: null,
+            allNodes: [],
+            allEdges: [],
+            layers: {
+                baseEdges: null,
+                markers: null,
+                route: null,
+                tsp: null,
+            },
+            edgePolylines: [],
+        };
+
+        // ── Init ────────────────────────────────────────────────────
+        async function initApp() {
+            // 1. Map
+            state.map = L.map('map').setView(MAP_CENTER, MAP_ZOOM);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap &copy; CARTO'
+            }).addTo(state.map);
+
+            // 2. Layers
+            Object.keys(state.layers).forEach(k => {
+                state.layers[k] = L.layerGroup().addTo(state.map);
+            });
+
+            // 3. Fetch
+            try {
+                const [nodes, edges] = await Promise.all([
+                    fetch('/api/nodes').then(r => r.json()),
+                    fetch('/api/edges').then(r => r.json()),
+                ]);
+                state.allNodes = nodes;
+                state.allEdges = edges;
+
+                renderMarkers(nodes);
+                renderBaseEdges(edges);
+                populateDropdowns(nodes);
+            } catch (err) {
+                console.error("Failed to fetch data:", err);
+            }
+        }
+
+        // ── Render ──────────────────────────────────────────────────
+        function renderMarkers(nodes) {
+            state.layers.markers.clearLayers();
+            nodes.forEach(node => {
+                const marker = L.circleMarker([node.lat, node.lng], {
+                    radius: 6, fillColor: '#2563eb', color: '#1e3a8a',
+                    weight: 2, opacity: 1, fillOpacity: 0.9
+                });
+                marker.bindTooltip(node.name, { permanent: false, direction: 'top', className: 'custom-tooltip' });
+                marker.addTo(state.layers.markers);
+            });
+        }
+
+        function renderBaseEdges(edges) {
+            state.layers.baseEdges.clearLayers();
+            state.edgePolylines = [];
+            edges.forEach(edge => {
+                const latlngs = [[edge.fromLat, edge.fromLng], [edge.toLat, edge.toLng]];
+                const poly = L.polyline(latlngs, {
+                    color: edge.isBlocked ? COLORS.blocked : COLORS.edge,
+                    weight: edge.isBlocked ? 4 : 2,
+                    opacity: edge.isBlocked ? 0.9 : 0.4,
+                    dashArray: edge.isBlocked ? '8 4' : null,
+                });
+                poly.on('click', (e) => {
+                    L.DomEvent.stopPropagation(e);
+                    handleEdgeClick(edge, poly);
+                });
+                poly.addTo(state.layers.baseEdges);
+                state.edgePolylines.push({ edge, poly });
+            });
+        }
+
+        function populateDropdowns(nodes) {
+            const sorted = [...nodes].sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+            const makeOption = n => `<option value="${n.id}">${n.name}</option>`;
+            const optionsHtml = sorted.map(makeOption).join('');
+
+            ['dijk-from', 'dijk-to', 'tsp-depot'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = optionsHtml;
+            });
+
+            document.querySelectorAll('.tsp-delivery').forEach(sel => {
+                sel.innerHTML = '<option value="">-- Chọn điểm giao --</option>' + optionsHtml;
+            });
+        }
+
+        // ── Handlers ────────────────────────────────────────────────
+        document.querySelectorAll('.tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+            });
+        });
+
+        document.getElementById('btn-find-route').addEventListener('click', async () => {
+            const from = document.getElementById('dijk-from').value;
+            const to = document.getElementById('dijk-to').value;
+            const mode = document.querySelector('input[name="dijk-mode"]:checked').value;
+            const resultDiv = document.getElementById('dijk-result');
+
+            resultDiv.innerHTML = '<em style="color:#94a3b8">Đang tìm đường...</em>';
+            state.layers.route.clearLayers();
+            state.layers.tsp.clearLayers();
+
+            try {
+                const res = await fetch('/api/route', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ from, to, mode })
+                });
+                const data = await res.json();
+
+                if (!data.reachable) {
+                    resultDiv.innerHTML = `<p style="color:#f87171; padding:10px; background:rgba(239,68,68,0.1); border-radius:8px">❌ ${data.error}</p>`;
+                    return;
+                }
+
+                const latlngs = data.coordinates.map(c => [c.lat, c.lng]);
+                const poly = L.polyline(latlngs, { color: COLORS.route, weight: 6, opacity: 0.9, lineJoin: 'round' });
+                poly.addTo(state.layers.route);
+                state.map.fitBounds(poly.getBounds(), { padding: [50, 50] });
+
+                L.circleMarker(latlngs[0], { radius: 8, fillColor: '#10b981', color: 'white', weight: 2, fillOpacity: 1 }).addTo(state.layers.route);
+                L.circleMarker(latlngs[latlngs.length - 1], { radius: 8, fillColor: '#ef4444', color: 'white', weight: 2, fillOpacity: 1 }).addTo(state.layers.route);
+
+                const pathNames = data.coordinates.map(c => c.name).join(' → ');
+                resultDiv.innerHTML = `
+                    <div class="result-card">
+                        <p>📍 <strong>${pathNames}</strong></p>
+                        <p>💰 Chi phí: <strong>${data.totalCostFormatted}</strong></p>
+                        <p>🔢 Số điểm dừng: <strong>${data.path.length}</strong></p>
+                    </div>`;
+            } catch (err) {
+                resultDiv.innerHTML = `<p style="color:#f87171">Lỗi kết nối server</p>`;
+            }
+        });
+
+        document.getElementById('btn-add-delivery').addEventListener('click', () => {
+            const list = document.getElementById('tsp-delivery-list');
+            const current = list.querySelectorAll('.tsp-delivery').length;
+            if (current >= 5) { alert('Tối đa 5 điểm giao hàng'); return; }
+
+            const sel = document.createElement('select');
+            sel.className = 'tsp-delivery';
+            const sorted = [...state.allNodes].sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+            sel.innerHTML = '<option value="">-- Chọn điểm giao --</option>'
+                + sorted.map(n => `<option value="${n.id}">${n.name}</option>`).join('');
+            list.appendChild(sel);
+        });
+
+        document.getElementById('btn-solve-tsp').addEventListener('click', async () => {
+            const depot = document.getElementById('tsp-depot').value;
+            const deliveries = [...document.querySelectorAll('.tsp-delivery')]
+                .map(s => s.value).filter(v => v && v !== depot);
+            const mode = document.querySelector('input[name="tsp-mode"]:checked').value;
+            const resultDiv = document.getElementById('tsp-result');
+
+            if (deliveries.length < 1) {
+                resultDiv.innerHTML = '<p style="color:#fbbf24; padding:10px; background:rgba(251,191,36,0.1); border-radius:8px">⚠️ Chọn ít nhất 1 điểm giao</p>';
+                return;
+            }
+
+            state.layers.route.clearLayers();
+            state.layers.tsp.clearLayers();
+            resultDiv.innerHTML = '<em style="color:#94a3b8">Đang tính toán lộ trình tối ưu...</em>';
+
+            try {
+                const res = await fetch('/api/tsp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ depot, deliveries, mode })
+                });
+                const data = await res.json();
+
+                if (!data.reachable) {
+                    resultDiv.innerHTML = `<p style="color:#f87171">❌ ${data.error}</p>`;
+                    return;
+                }
+
+                data.legs.forEach(leg => {
+                    const latlngs = leg.coordinates.map(c => [c.lat, c.lng]);
+                    const color = COLORS.tsp[(leg.stepIndex - 1) % COLORS.tsp.length];
+                    L.polyline(latlngs, { color, weight: 5, opacity: 0.9, lineJoin: 'round' }).addTo(state.layers.tsp);
+
+                    const start = latlngs[0];
+                    L.marker(start, {
+                        icon: L.divIcon({ html: `<div class="step-badge">${leg.stepIndex}</div>`, className: '', iconSize: [24, 24] })
+                    }).addTo(state.layers.tsp);
+                });
+
+                const allCoords = data.legs.flatMap(l => l.coordinates.map(c => [c.lat, c.lng]));
+                state.map.fitBounds(L.latLngBounds(allCoords), { padding: [50, 50] });
+
+                const orderNames = data.visitOrder
+                    .map(id => state.allNodes.find(n => n.id === id)?.name || id)
+                    .join(' → ');
+
+                resultDiv.innerHTML = `
+                    <div class="result-card">
+                        <p>🚚 Lộ trình: <strong>${orderNames} → Kho</strong></p>
+                        <p>💰 Tổng chi phí: <strong>${data.totalCostFormatted}</strong></p>
+                        <p>🔢 Số chặng di chuyển: <strong>${data.legs.length}</strong></p>
+                    </div>`;
+            } catch (err) {
+                resultDiv.innerHTML = `<p style="color:#f87171">Lỗi kết nối server</p>`;
+            }
+        });
+
+        async function handleEdgeClick(edge, poly) {
+            const blockPanel = document.getElementById('panel-block');
+            if (!blockPanel.classList.contains('active')) return;
+
+            const action = edge.isBlocked ? 'unblock' : 'block';
+            const fromName = state.allNodes.find(n => n.id === edge.from)?.name || edge.from;
+            const toName = state.allNodes.find(n => n.id === edge.to)?.name || edge.to;
+
+            if (!confirm(`${edge.isBlocked ? 'Mở lại' : 'Chặn'} đoạn đường: ${fromName} → ${toName}?`)) return;
+
+            try {
+                const res = await fetch('/api/block', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, from: edge.from, to: edge.to })
+                });
+                const data = await res.json();
+
+                if (!data.success) { alert(data.error); return; }
+
+                edge.isBlocked = data.blocked;
+                poly.setStyle({
+                    color: data.blocked ? COLORS.blocked : COLORS.edge,
+                    weight: data.blocked ? 4 : 2,
+                    opacity: data.blocked ? 0.9 : 0.4,
+                    dashArray: data.blocked ? '8 4' : null,
+                });
+
+                updateBlockedUI();
+            } catch (err) {
+                alert('Lỗi kết nối server');
+            }
+        }
+
+        function updateBlockedUI() {
+            const blockedList = state.edgePolylines
+                .filter(ep => ep.edge.isBlocked)
+                .map(ep => {
+                    const fn = state.allNodes.find(n => n.id === ep.edge.from)?.name || ep.edge.from;
+                    const tn = state.allNodes.find(n => n.id === ep.edge.to)?.name || ep.edge.to;
+                    return `<li>${fn} → ${tn}</li>`;
+                }).join('');
+
+            document.getElementById('block-status').innerHTML = blockedList
+                ? `<ul style="margin-top:8px">${blockedList}</ul>`
+                : 'Chưa có đường nào bị chặn.';
+        }
+
+        document.getElementById('btn-reset-all').addEventListener('click', async () => {
+            const blocked = state.edgePolylines.filter(ep => ep.edge.isBlocked);
+            if (blocked.length === 0) return;
+
+            if (!confirm('Bạn có chắc chắn muốn mở lại tất cả các đoạn đường đã chặn?')) return;
+
+            for (const { edge, poly } of blocked) {
+                try {
+                    await fetch('/api/block', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'unblock', from: edge.from, to: edge.to })
+                    });
+                    edge.isBlocked = false;
+                    poly.setStyle({ color: COLORS.edge, weight: 2, opacity: 0.4, dashArray: null });
+                } catch (e) { }
+            }
+            updateBlockedUI();
+        });
+
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+
+</html>
