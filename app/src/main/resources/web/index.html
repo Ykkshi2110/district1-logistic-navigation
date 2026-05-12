@@ -207,6 +207,77 @@
             background: #334155;
             border-radius: 3px;
         }
+
+        /* Accordion Styles */
+        .accordion {
+            margin-top: 15px;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #0f172a;
+        }
+        .accordion-header {
+            padding: 12px 15px;
+            background: #1e293b;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #60a5fa;
+            transition: background 0.2s;
+        }
+        .accordion-header:hover { background: #334155; }
+        .accordion-header::after {
+            content: '▼';
+            font-size: 0.7rem;
+            transition: transform 0.3s;
+        }
+        .accordion.open .accordion-header::after {
+            transform: rotate(180deg);
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background: #020617;
+        }
+        .accordion.open .accordion-content {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .log-list {
+            padding: 10px 15px;
+            font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            line-height: 1.4;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        .log-item {
+            display: block;
+            padding: 2px 0;
+            border-bottom: 1px solid #0f172a;
+        }
+        .log-item:last-child { border-bottom: none; }
+        .log-success { color: #22c55e; font-weight: bold; } /* > prefix */
+        .log-fail { color: #64748b; font-style: italic; }   /* x or - prefix */
+        .log-info { color: #60a5fa; }                      /* * or + prefix */
+        
+        .copy-btn {
+            background: #334155;
+            color: #cbd5e1;
+            border: none;
+            padding: 4px 8px;
+            font-size: 0.7rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 15px;
+            transition: all 0.2s;
+        }
+        .copy-btn:hover { background: #475569; color: white; }
     </style>
 </head>
 
@@ -235,6 +306,13 @@
             </div>
             <button id="btn-find-route">🔍 TÌM ĐƯỜNG NGAY</button>
             <div id="dijk-result"></div>
+            <div id="dijk-algo-details" class="accordion" style="display:none">
+                <div class="accordion-header">🔍 Chi tiết thuật toán</div>
+                <div class="accordion-content">
+                    <button class="copy-btn" onclick="copyLogs('dijk')">📋 Sao chép Log</button>
+                    <div class="log-list" id="dijk-logs"></div>
+                </div>
+            </div>
         </div>
 
         <!-- Panel: TSP -->
@@ -257,6 +335,13 @@
             </div>
             <button id="btn-solve-tsp">🚚 TỐI ƯU LỘ TRÌNH</button>
             <div id="tsp-result"></div>
+            <div id="tsp-algo-details" class="accordion" style="display:none">
+                <div class="accordion-header">🔍 Chi tiết thuật toán</div>
+                <div class="accordion-content">
+                    <button class="copy-btn" onclick="copyLogs('tsp')">📋 Sao chép Log</button>
+                    <div class="log-list" id="tsp-logs"></div>
+                </div>
+            </div>
         </div>
 
         <!-- Panel: Block -->
@@ -277,10 +362,10 @@
         const MAP_CENTER = [10.776, 106.700];
         const MAP_ZOOM = 15;
         const COLORS = {
-            edge: '#64748b',  // xám xanh
+            edge: '#94a3b8',  // xám đậm hơn
             blocked: '#ef4444',  // đỏ
-            route: '#3b82f6',  // xanh dương
-            tsp: ['#10b981', '#059669', '#047857', '#065f46', '#064e3b'] // xanh lá gradient
+            route: '#2563eb',  // xanh dương sáng
+            tsp: ['#10b981', '#34d399', '#059669', '#047857', '#064e3b'] // xanh lá rực rỡ
         };
 
         // ── State ───────────────────────────────────────────────────
@@ -301,7 +386,7 @@
         async function initApp() {
             // 1. Map
             state.map = L.map('map').setView(MAP_CENTER, MAP_ZOOM);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; OpenStreetMap &copy; CARTO'
             }).addTo(state.map);
 
@@ -423,6 +508,8 @@
                         <p>💰 Chi phí: <strong>${data.totalCostFormatted}</strong></p>
                         <p>🔢 Số điểm dừng: <strong>${data.path.length}</strong></p>
                     </div>`;
+
+                renderAlgoLogs(data.executionSteps, 'dijk');
             } catch (err) {
                 resultDiv.innerHTML = `<p style="color:#f87171">Lỗi kết nối server</p>`;
             }
@@ -494,6 +581,8 @@
                         <p>💰 Tổng chi phí: <strong>${data.totalCostFormatted}</strong></p>
                         <p>🔢 Số chặng di chuyển: <strong>${data.legs.length}</strong></p>
                     </div>`;
+
+                renderAlgoLogs(data.executionSteps, 'tsp');
             } catch (err) {
                 resultDiv.innerHTML = `<p style="color:#f87171">Lỗi kết nối server</p>`;
             }
@@ -565,6 +654,44 @@
                 } catch (e) { }
             }
             updateBlockedUI();
+        });
+
+        function renderAlgoLogs(steps, prefix) {
+            const container = document.getElementById(prefix + '-algo-details');
+            const logList = document.getElementById(prefix + '-logs');
+            if (!steps || steps.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+            container.style.display = 'block';
+            container.classList.remove('open');
+            
+            logList.innerHTML = steps.map(s => {
+                let cls = '';
+                const trimmed = s.trim();
+                if (trimmed.startsWith('>') || trimmed.includes('[Kỷ lục]')) cls = 'log-success';
+                else if (trimmed.startsWith('x') || trimmed.startsWith('-')) cls = 'log-fail';
+                else if (trimmed.startsWith('*') || trimmed.startsWith('+')) cls = 'log-info';
+                
+                return `<div class="log-item ${cls}">${s}</div>`;
+            }).join('');
+        }
+
+        window.copyLogs = function(prefix) {
+            const logList = document.getElementById(prefix + '-logs');
+            const text = logList.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                const originalText = btn.innerText;
+                btn.innerText = '✅ Đã sao chép!';
+                setTimeout(() => btn.innerText = originalText, 2000);
+            });
+        };
+
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', () => {
+                header.parentElement.classList.toggle('open');
+            });
         });
 
         document.addEventListener('DOMContentLoaded', initApp);

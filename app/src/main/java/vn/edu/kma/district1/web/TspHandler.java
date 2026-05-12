@@ -70,6 +70,10 @@ public class TspHandler implements HttpHandler {
                     .map(id -> "\"" + WebServer.jsonEscape(id) + "\"")
                     .toList();
 
+            List<String> stepJsons = tsp.executionSteps().stream()
+                    .map(s -> "\"" + WebServer.jsonEscape(s) + "\"")
+                    .toList();
+
             String costFormatted = JsonUtils.formatCost(tsp.totalCost(), mode);
 
             String json = "{"
@@ -77,7 +81,8 @@ public class TspHandler implements HttpHandler {
                     + "\"visitOrder\":" + JsonUtils.toJsonArray(orderJsons) + ","
                     + "\"totalCost\":" + tsp.totalCost() + ","
                     + "\"totalCostFormatted\":\"" + costFormatted + "\","
-                    + "\"legs\":" + JsonUtils.toJsonArray(legJsons)
+                    + "\"legs\":" + JsonUtils.toJsonArray(legJsons) + ","
+                    + "\"executionSteps\":" + JsonUtils.toJsonArray(stepJsons)
                     + "}";
 
             WebServer.sendJson(exchange, 200, json);

@@ -1,52 +1,43 @@
 package vn.edu.kma.district1.service;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.PriorityQueue;
-import java.util.Set;
-import vn.edu.kma.district1.exception.AppException;
+import java.util.*;
 import vn.edu.kma.district1.model.Edge;
 import vn.edu.kma.district1.model.Graph;
+import vn.edu.kma.district1.model.Node;
 import vn.edu.kma.district1.model.RouteResult;
 import vn.edu.kma.district1.model.WeightMode;
 
 /**
- * Dijkstra trên đồ thị không âm; trọng số lấy từ {@link Edge#getWeight(WeightMode)}.
+ * Thuật toán Dijkstra tìm đường đi ngắn nhất.
+ * Cải tiến: Thu thập log các bước thực hiện của thuật toán với định dạng trace chi tiết.
  */
 public final class DijkstraService {
 
     private static final double COST_TOLERANCE = 1e-9;
 
-    /**
-     * Tìm đường tối ưu theo {@link WeightMode} (khoảng cách mét hoặc thời gian giây).
-     */
     public RouteResult findRoute(Graph graph, String sourceId, String targetId, WeightMode mode) {
         Objects.requireNonNull(graph, "graph");
+        Objects.requireNonNull(sourceId, "sourceId");
+        Objects.requireNonNull(targetId, "targetId");
         Objects.requireNonNull(mode, "mode");
-        if (!graph.containsNode(sourceId) || !graph.containsNode(targetId)) {
-            throw new AppException("Đỉnh nguồn hoặc đích không tồn tại trên bản đồ.");
-        }
+
+        List<String> steps = new ArrayList<>();
+        steps.add("Bắt đầu tìm đường từ " + getNodeName(graph, sourceId) + " đến " + getNodeName(graph, targetId) + " (Chế độ: " + mode + ")");
+
         if (sourceId.equals(targetId)) {
-            return RouteResult.success(List.of(sourceId), 0.0);
+            steps.add("Điểm đi trùng điểm đến. Kết thúc sớm.");
+            return RouteResult.success(List.of(sourceId), 0.0, steps);
         }
 
-        // init: dist[source]=0 vì bắt đầu tại nguồn; các đỉnh khác vô cực để mọi bước relax đều cải thiện được.
         Map<String, Double> dist = new HashMap<>();
         Map<String, String> prev = new HashMap<>();
         Set<String> visited = new HashSet<>();
+        
         for (String id : graph.getAllNodeIds()) {
             dist.put(id, Double.MAX_VALUE);
         }
         dist.put(sourceId, 0.0);
 
-        // Ưu tiên cost nhỏ nhất — đây là cốt lõi greedy của Dijkstra trên trọng số không âm.
         PriorityQueue<Map.Entry<String, Double>> pq =
                 new PriorityQueue<>(Comparator.comparingDouble(Map.Entry::getValue));
         pq.offer(new AbstractMap.SimpleEntry<>(sourceId, 0.0));
@@ -55,42 +46,67 @@ public final class DijkstraService {
             Map.Entry<String, Double> entry = pq.poll();
             String nodeId = entry.getKey();
             double cost = entry.getValue();
+            String nodeName = getNodeName(graph, nodeId);
 
-            // Bỏ qua bản ghi “cũ” trong hàng đợi khi đã có đường tốt hơn tới cùng đỉnh (lazy decrease-key).
-            // Vì ta không decrease-key tại chỗ, một đỉnh có thể nằm trong PQ nhiều lần; chỉ bản có cost khớp dist[] mới hợp lệ.
             if (cost > dist.get(nodeId) + COST_TOLERANCE) {
                 continue;
             }
+            
             if (visited.contains(nodeId)) {
                 continue;
             }
+            
+            steps.add("* [Thăm] Lấy đỉnh " + nodeName + " từ hàng đợi (Cost hiện tại: " + formatCost(cost, mode) + ")");
+            
+            if (nodeId.equals(targetId)) {
+                steps.add("> [Đích] Đã tìm thấy đích " + nodeName + ". Dừng thuật toán.");
+                break;
+            }
+            
             visited.add(nodeId);
 
-            // poll: đã xác định đường tối nhất tới nodeId; giờ relax các cạnh đi ra để cập nhật hàng xóm.
             for (Edge edge : graph.getAdjacentEdges(nodeId)) {
                 if (!edge.isTraversable()) {
                     continue;
                 }
-                String neighbor = edge.getToNodeId();
-                double newCost = dist.get(nodeId) + edge.getWeight(mode);
-                if (newCost + COST_TOLERANCE < dist.get(neighbor)) {
-                    dist.put(neighbor, newCost);
-                    prev.put(neighbor, nodeId);
-                    pq.offer(new AbstractMap.SimpleEntry<>(neighbor, newCost));
+                String neighborId = edge.getToNodeId();
+                String neighborName = getNodeName(graph, neighborId);
+                double weight = edge.getWeight(mode);
+                double oldCost = dist.get(neighborId);
+                double newCost = dist.get(nodeId) + weight;
+                
+                if (newCost + COST_TOLERANCE < oldCost) {
+                    dist.put(neighborId, newCost);
+                    prev.put(neighborId, nodeId);
+                    pq.offer(new AbstractMap.SimpleEntry<>(neighborId, newCost));
+                    steps.add("  > [Relax] Đỉnh " + neighborName + " qua " + nodeName + ": " + (oldCost >= Double.MAX_VALUE / 2 ? "∞" : formatCost(oldCost, mode)) + " -> " + formatCost(newCost, mode) + " (Cải thiện!)");
+                } else {
+                    steps.add("  x [Skip] Đỉnh " + neighborName + " qua " + nodeName + ": " + formatCost(newCost, mode) + " >= " + formatCost(oldCost, mode) + " (Không tốt hơn)");
                 }
             }
         }
 
-        return reconstructPath(sourceId, targetId, dist, prev);
+        return reconstructPath(graph, sourceId, targetId, dist, prev, steps, mode);
     }
 
-    /**
-     * Dựng lại đường đi từ prev[]: đi ngược từ đích về nguồn rồi addFirst để thứ tự đúng từ nguồn → đích.
-     */
+    public String getNodeName(Graph graph, String id) {
+        Node n = graph.getNode(id);
+        return n != null ? n.getName() : id;
+    }
+
+    private String formatCost(double cost, WeightMode mode) {
+        if (mode == WeightMode.DISTANCE) {
+            return String.format("%.0f m", cost);
+        } else {
+            return String.format("%.0f giây", cost);
+        }
+    }
+
     private RouteResult reconstructPath(
-            String sourceId, String targetId, Map<String, Double> dist, Map<String, String> prev) {
+            Graph graph, String sourceId, String targetId, Map<String, Double> dist, Map<String, String> prev, List<String> steps, WeightMode mode) {
         if (dist.get(targetId) >= Double.MAX_VALUE / 2) {
-            return RouteResult.noPath();
+            steps.add("Không tìm thấy đường đi tới đích.");
+            return RouteResult.noPath(steps);
         }
         LinkedList<String> path = new LinkedList<>();
         String cursor = targetId;
@@ -101,9 +117,11 @@ public final class DijkstraService {
             }
             cursor = prev.get(cursor);
         }
-        if (!path.getFirst().equals(sourceId)) {
-            return RouteResult.noPath();
+        if (path.isEmpty() || !path.getFirst().equals(sourceId)) {
+            steps.add("Lỗi khi dựng lại đường đi.");
+            return RouteResult.noPath(steps);
         }
-        return RouteResult.success(new ArrayList<>(path), dist.get(targetId));
+        steps.add("> [Kết quả] Dựng lại đường đi thành công. Tổng chi phí: " + formatCost(dist.get(targetId), mode));
+        return RouteResult.success(new ArrayList<>(path), dist.get(targetId), steps);
     }
 }

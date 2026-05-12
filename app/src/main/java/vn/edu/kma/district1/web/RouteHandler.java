@@ -41,7 +41,10 @@ public class RouteHandler implements HttpHandler {
         try {
             RouteResult result = dijkstraService.findRoute(graph, fromId, toId, mode);
             if (!result.isReachable()) {
-                WebServer.sendJson(exchange, 200, "{\"reachable\":false,\"path\":[],\"coordinates\":[],\"error\":\"Không tìm thấy đường đi\"}");
+                List<String> stepJsons = result.getExecutionSteps().stream()
+                        .map(s -> "\"" + WebServer.jsonEscape(s) + "\"")
+                        .toList();
+                WebServer.sendJson(exchange, 200, "{\"reachable\":false,\"path\":[],\"coordinates\":[],\"error\":\"Không tìm thấy đường đi\",\"executionSteps\":" + JsonUtils.toJsonArray(stepJsons) + "}");
                 return;
             }
 
@@ -53,6 +56,10 @@ public class RouteHandler implements HttpHandler {
                     .map(id -> "\"" + WebServer.jsonEscape(id) + "\"")
                     .toList();
 
+            List<String> stepJsons = result.getExecutionSteps().stream()
+                    .map(s -> "\"" + WebServer.jsonEscape(s) + "\"")
+                    .toList();
+
             String costFormatted = JsonUtils.formatCost(result.getTotalCost(), mode);
 
             String json = "{"
@@ -61,7 +68,8 @@ public class RouteHandler implements HttpHandler {
                     + "\"totalCost\":" + result.getTotalCost() + ","
                     + "\"totalCostFormatted\":\"" + costFormatted + "\","
                     + "\"path\":" + JsonUtils.toJsonArray(pathJsons) + ","
-                    + "\"coordinates\":" + JsonUtils.toJsonArray(coordJsons)
+                    + "\"coordinates\":" + JsonUtils.toJsonArray(coordJsons) + ","
+                    + "\"executionSteps\":" + JsonUtils.toJsonArray(stepJsons)
                     + "}";
 
             WebServer.sendJson(exchange, 200, json);
