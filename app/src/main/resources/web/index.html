@@ -14,23 +14,67 @@
         }
 
         body {
-            display: flex;
             height: 100vh;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: #0f172a;
             color: #f1f5f9;
+            overflow: hidden;
+        }
+
+        #app-layout {
+            display: flex;
+            width: 100%;
+            height: 100%;
         }
 
         #sidebar {
-            width: 360px;
+            width: 420px;
+            min-width: 360px;
+            max-width: 55vw;
             background: #1e293b;
             color: #f1f5f9;
             display: flex;
             flex-direction: column;
             overflow-y: auto;
-            border-right: 1px solid #334155;
             box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
             z-index: 1000;
+            flex-shrink: 0;
+        }
+
+        #resize-handle {
+            width: 10px;
+            cursor: col-resize;
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            border-left: 1px solid #334155;
+            border-right: 1px solid #1e293b;
+            position: relative;
+            flex-shrink: 0;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+
+        #resize-handle::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 3px;
+            height: 72px;
+            border-radius: 999px;
+            background: #475569;
+            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.6);
+        }
+
+        #resize-handle:hover,
+        body.resizing #resize-handle {
+            background: linear-gradient(180deg, #1e293b 0%, #2563eb 50%, #1e293b 100%);
+            border-left-color: #60a5fa;
+            border-right-color: #2563eb;
+        }
+
+        body.resizing {
+            cursor: col-resize;
+            user-select: none;
         }
 
         #header {
@@ -244,7 +288,7 @@
             background: #020617;
         }
         .accordion.open .accordion-content {
-            max-height: 400px;
+            max-height: 520px;
             overflow-y: auto;
         }
         .log-list {
@@ -255,6 +299,7 @@
             line-height: 1.4;
             white-space: pre;
             overflow-x: auto;
+            overflow-y: hidden;
         }
         .log-item {
             display: block;
@@ -282,85 +327,91 @@
 </head>
 
 <body>
-    <div id="sidebar">
-        <div id="header">🗺️ District 1 Logistics</div>
+    <div id="app-layout">
+        <div id="sidebar">
+            <div id="header">🗺️ District 1 Logistics</div>
 
-        <div id="tabs">
-            <button class="tab active" data-tab="dijkstra">TÌM ĐƯỜNG</button>
-            <button class="tab" data-tab="tsp">GIAO HÀNG</button>
-            <button class="tab" data-tab="block">CHẶN ĐƯỜNG</button>
-        </div>
-
-        <!-- Panel: Dijkstra -->
-        <div id="panel-dijkstra" class="panel active">
-            <label>Điểm đi</label>
-            <select id="dijk-from"></select>
-            <label>Điểm đến</label>
-            <select id="dijk-to"></select>
-            <label>Chế độ tối ưu</label>
-            <div class="radio-group">
-                <label style="color:white; cursor:pointer"><input type="radio" name="dijk-mode" value="DISTANCE"
-                        checked> Ngắn nhất</label>
-                <label style="color:white; cursor:pointer"><input type="radio" name="dijk-mode" value="TIME"> Nhanh
-                    nhất</label>
+            <div id="tabs">
+                <button class="tab active" data-tab="dijkstra">TÌM ĐƯỜNG</button>
+                <button class="tab" data-tab="tsp">GIAO HÀNG</button>
+                <button class="tab" data-tab="block">CHẶN ĐƯỜNG</button>
             </div>
-            <button id="btn-find-route">🔍 TÌM ĐƯỜNG NGAY</button>
-            <div id="dijk-result"></div>
-            <div id="dijk-algo-details" class="accordion" style="display:none">
-                <div class="accordion-header">🔍 Chi tiết thuật toán</div>
-                <div class="accordion-content">
-                    <button class="copy-btn" onclick="copyLogs('dijk')">📋 Sao chép Log</button>
-                    <div class="log-list" id="dijk-logs"></div>
+
+            <!-- Panel: Dijkstra -->
+            <div id="panel-dijkstra" class="panel active">
+                <label>Điểm đi</label>
+                <select id="dijk-from"></select>
+                <label>Điểm đến</label>
+                <select id="dijk-to"></select>
+                <label>Chế độ tối ưu</label>
+                <div class="radio-group">
+                    <label style="color:white; cursor:pointer"><input type="radio" name="dijk-mode" value="DISTANCE"
+                            checked> Ngắn nhất</label>
+                    <label style="color:white; cursor:pointer"><input type="radio" name="dijk-mode" value="TIME"> Nhanh
+                        nhất</label>
+                </div>
+                <button id="btn-find-route">🔍 TÌM ĐƯỜNG NGAY</button>
+                <div id="dijk-result"></div>
+                <div id="dijk-algo-details" class="accordion" style="display:none">
+                    <div class="accordion-header">🔍 Chi tiết thuật toán</div>
+                    <div class="accordion-content">
+                        <button class="copy-btn" onclick="copyLogs('dijk')">📋 Sao chép Log</button>
+                        <div class="log-list" id="dijk-logs"></div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Panel: TSP -->
-        <div id="panel-tsp" class="panel">
-            <label>Kho xuất phát (Depot)</label>
-            <select id="tsp-depot"></select>
-            <label>Các điểm giao hàng</label>
-            <div id="tsp-delivery-list" style="display:flex; flex-direction:column; gap:8px">
-                <select class="tsp-delivery"></select>
-                <select class="tsp-delivery"></select>
-                <select class="tsp-delivery"></select>
-            </div>
-            <button id="btn-add-delivery" style="background:#334155; font-size:0.8rem">+ THÊM ĐIỂM GIAO</button>
-            <label>Chế độ tối ưu</label>
-            <div class="radio-group">
-                <label style="color:white; cursor:pointer"><input type="radio" name="tsp-mode" value="DISTANCE" checked>
-                    Ngắn nhất</label>
-                <label style="color:white; cursor:pointer"><input type="radio" name="tsp-mode" value="TIME"> Nhanh
-                    nhất</label>
-            </div>
-            <button id="btn-solve-tsp">🚚 TỐI ƯU LỘ TRÌNH</button>
-            <div id="tsp-result"></div>
-            <div id="tsp-algo-details" class="accordion" style="display:none">
-                <div class="accordion-header">🔍 Chi tiết thuật toán</div>
-                <div class="accordion-content">
-                    <button class="copy-btn" onclick="copyLogs('tsp')">📋 Sao chép Log</button>
-                    <div class="log-list" id="tsp-logs"></div>
+            <!-- Panel: TSP -->
+            <div id="panel-tsp" class="panel">
+                <label>Kho xuất phát (Depot)</label>
+                <select id="tsp-depot"></select>
+                <label>Các điểm giao hàng</label>
+                <div id="tsp-delivery-list" style="display:flex; flex-direction:column; gap:8px">
+                    <select class="tsp-delivery"></select>
+                    <select class="tsp-delivery"></select>
+                    <select class="tsp-delivery"></select>
+                </div>
+                <button id="btn-add-delivery" style="background:#334155; font-size:0.8rem">+ THÊM ĐIỂM GIAO</button>
+                <label>Chế độ tối ưu</label>
+                <div class="radio-group">
+                    <label style="color:white; cursor:pointer"><input type="radio" name="tsp-mode" value="DISTANCE" checked>
+                        Ngắn nhất</label>
+                    <label style="color:white; cursor:pointer"><input type="radio" name="tsp-mode" value="TIME"> Nhanh
+                        nhất</label>
+                </div>
+                <button id="btn-solve-tsp">🚚 TỐI ƯU LỘ TRÌNH</button>
+                <div id="tsp-result"></div>
+                <div id="tsp-algo-details" class="accordion" style="display:none">
+                    <div class="accordion-header">🔍 Chi tiết thuật toán</div>
+                    <div class="accordion-content">
+                        <button class="copy-btn" onclick="copyLogs('tsp')">📋 Sao chép Log</button>
+                        <div class="log-list" id="tsp-logs"></div>
+                    </div>
                 </div>
             </div>
+
+            <!-- Panel: Block -->
+            <div id="panel-block" class="panel">
+                <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 10px;">Click trực tiếp vào các đoạn đường trên
+                    bản đồ để chặn hoặc mở lại.</p>
+                <label>Danh sách đường bị chặn</label>
+                <div id="block-status">Chưa có đường nào bị chặn.</div>
+                <button id="btn-reset-all" style="background:#ef4444">🔓 MỞ TẤT CẢ ĐƯỜNG</button>
+            </div>
         </div>
 
-        <!-- Panel: Block -->
-        <div id="panel-block" class="panel">
-            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 10px;">Click trực tiếp vào các đoạn đường trên
-                bản đồ để chặn hoặc mở lại.</p>
-            <label>Danh sách đường bị chặn</label>
-            <div id="block-status">Chưa có đường nào bị chặn.</div>
-            <button id="btn-reset-all" style="background:#ef4444">🔓 MỞ TẤT CẢ ĐƯỜNG</button>
-        </div>
+        <div id="resize-handle" aria-hidden="true"></div>
+        <div id="map"></div>
     </div>
-
-    <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // ── Constants ──────────────────────────────────────────────
         const MAP_CENTER = [10.776, 106.700];
         const MAP_ZOOM = 15;
+        const SIDEBAR_MIN_WIDTH = 360;
+        const SIDEBAR_DEFAULT_WIDTH = 420;
+        const SIDEBAR_MAX_VIEWPORT_RATIO = 0.55;
         const COLORS = {
             edge: '#94a3b8',  // xám đậm hơn
             blocked: '#ef4444',  // đỏ
@@ -382,8 +433,54 @@
             edgePolylines: [],
         };
 
+        function clampSidebarWidth(width) {
+            const maxWidth = Math.max(SIDEBAR_MIN_WIDTH, Math.floor(window.innerWidth * SIDEBAR_MAX_VIEWPORT_RATIO));
+            return Math.min(Math.max(width, SIDEBAR_MIN_WIDTH), maxWidth);
+        }
+
+        function applySidebarWidth(width) {
+            document.getElementById('sidebar').style.width = `${clampSidebarWidth(width)}px`;
+        }
+
+        function setupSidebarResize() {
+            const sidebar = document.getElementById('sidebar');
+            const handle = document.getElementById('resize-handle');
+            let isResizing = false;
+
+            applySidebarWidth(SIDEBAR_DEFAULT_WIDTH);
+
+            handle.addEventListener('mousedown', (event) => {
+                event.preventDefault();
+                isResizing = true;
+                document.body.classList.add('resizing');
+            });
+
+            window.addEventListener('mousemove', (event) => {
+                if (!isResizing) return;
+                applySidebarWidth(event.clientX);
+                if (state.map) {
+                    state.map.invalidateSize(false);
+                }
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (!isResizing) return;
+                isResizing = false;
+                document.body.classList.remove('resizing');
+            });
+
+            window.addEventListener('resize', () => {
+                applySidebarWidth(sidebar.offsetWidth || SIDEBAR_DEFAULT_WIDTH);
+                if (state.map) {
+                    state.map.invalidateSize(false);
+                }
+            });
+        }
+
         // ── Init ────────────────────────────────────────────────────
         async function initApp() {
+            setupSidebarResize();
+
             // 1. Map
             state.map = L.map('map').setView(MAP_CENTER, MAP_ZOOM);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -461,12 +558,18 @@
         }
 
         // ── Handlers ────────────────────────────────────────────────
+        function activateTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => {
+                t.classList.toggle('active', t.dataset.tab === tabName);
+            });
+            document.querySelectorAll('.panel').forEach(p => {
+                p.classList.toggle('active', p.id === 'panel-' + tabName);
+            });
+        }
+
         document.querySelectorAll('.tab').forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-                btn.classList.add('active');
-                document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+                activateTab(btn.dataset.tab);
             });
         });
 
@@ -589,9 +692,6 @@
         });
 
         async function handleEdgeClick(edge, poly) {
-            const blockPanel = document.getElementById('panel-block');
-            if (!blockPanel.classList.contains('active')) return;
-
             const action = edge.isBlocked ? 'unblock' : 'block';
             const fromName = state.allNodes.find(n => n.id === edge.from)?.name || edge.from;
             const toName = state.allNodes.find(n => n.id === edge.to)?.name || edge.to;
@@ -617,6 +717,7 @@
                 });
 
                 updateBlockedUI();
+                activateTab('block');
             } catch (err) {
                 alert('Lỗi kết nối server');
             }

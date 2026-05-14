@@ -1,0 +1,25 @@
+{
+  "name": "final-exam",
+  "version": "1.0.0",
+  "description": "Ứng dụng CLI mô phỏng bản đồ Quận 1 (TP.HCM): tìm đường tối ưu (Dijkstra), tối ưu lộ trình giao hàng nhỏ (TSP + backtracking), chặn/mở chặn cạnh, và xem danh sách địa điểm.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ykkshi2110/district1-logistic-navigation.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Ykkshi2110/district1-logistic-navigation/issues"
+  },
+  "homepage": "https://github.com/Ykkshi2110/district1-logistic-navigation#readme",
+  "dependencies": {
+    "docx": "^9.6.1",
+    "puppeteer": "^24.43.1"
+  }
+}
